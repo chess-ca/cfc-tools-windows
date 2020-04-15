@@ -1,0 +1,20 @@
+
+# ---- Exclude data files (input & output)
+/data-in/
+/data-out/
+*.csv
+*.mdb
+*.mde
+
+# ---- Exclude other files
+*.pyc
+*.pyo
+*.pyz
+*.pyzw
+zzz.*
+/venv/
+/zzz/
+
+# ---- IDE (IntelliJ)
+/.idea/
+/*.iml
