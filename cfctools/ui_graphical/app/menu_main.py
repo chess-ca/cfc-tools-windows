@@ -7,7 +7,7 @@ class Menu(widgets.Menu):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self._menu_style = style.TEXT_REGULAR(bg='white')
+        self._menu_style = style.TK_MENU()
         self.config(**self._menu_style)
         self._add_File_submenu()
         self._add_Tools_submenu()
@@ -23,7 +23,7 @@ class Menu(widgets.Menu):
         # menu_1.add_separator()
         menu_1.add_command(
             label="Exit",
-            command=callbacks.R_APP_QUIT,
+            command=callbacks.CB_APP_QUIT,
             # accelerator='Ctrl+W'
         )
         self.add_cascade(label='File', menu=menu_1)

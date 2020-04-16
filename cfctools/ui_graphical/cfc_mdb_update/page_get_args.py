@@ -7,25 +7,56 @@ from tkinter import ttk
 
 class Page(widgets.Page):
     def init_config(self, parent, **kwargs):
-        self.config(bg=m.app.c_off_white, padx=16,)
-        self.columnconfigure(0, minsize=120)
-        for i in [0,1,2]:
-            self.rowconfigure(i, pad=8)
+        self.config(padding=(16,16,16,16),)
+        for i in [0,1,2,3]:
+            self.grid_rowconfigure(i, pad=8)
+        self.grid_columnconfigure(0, minsize=24)
+        self.grid_columnconfigure(1, weight=1)
 
-        tk.Label(self, **style.TEXT_REGULAR(),
-            text='Update cfc.mdb:',
-        ).grid(row=0, column=0, sticky=tk.SW,)
+        ttk.Label(self,
+            text='Update cfc.mdb:', anchor=tk.W,
+        ).grid(row=0, column=0, columnspan=3, sticky=tk.SW,)
 
-        # ttk.LabelFrame(self)
+        # ---- ---- Input Files
+        f = _FrameInputFiles(self)
+        f.grid(row=1, column=1, sticky=tk.EW)
+        # ---- ---- Updated File
+        f = _FrameUpdatedFile(self)
+        f.grid(row=2, column=1, sticky=tk.EW)
+        # ---- ---- (space)
+        self.grid_rowconfigure(3, minsize=48)
+        # ---- ---- Buttons
+        f = ttk.Frame(self)
+        ttk.Button(f,
+            text='Update .mdb',
+            command=callbacks.CB_HOME,
+        ).pack(side=tk.LEFT, padx=8,)
+        ttk.Button(f,
+            text='Cancel',
+            command=callbacks.CB_HOME,
+        ).pack(side=tk.LEFT, padx=8,)
+        f.grid(row=4, column=0, columnspan=3, sticky=tk.SW,)
 
-        # ttk.Button(self,
-        #     text='Go ...',
-        #     command=callbacks.CB_CFC_MDB_UPDATE,
-        # ).grid(row=2, column=0, sticky=tk.NE,)
-        #
-        # tk.Label(self, **v.style.TEXT_REGULAR(padx=16, justify='left'),
-        #     text='Update a cfc.mdb database with data from GoMembership',
-        # ).grid(row=2, column=2, sticky=tk.NW,)
+
+
+class _FrameInputFiles(ttk.LabelFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.configure(text='INPUT files')
+
+        ttk.Button(self,
+            text='Yada Yada'
+        ).grid(row=0, column=0, sticky=tk.W)
+
+
+class _FrameUpdatedFile(ttk.LabelFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.configure(text='UPDATED file')
+
+        ttk.Button(self,
+            text='Yada Yada'
+        ).grid(row=0, column=0, sticky=tk.W)
 
 
 def get_page(parent=None):

@@ -29,13 +29,14 @@ class Menu(SingletonMixin, tk.Menu):
     pass
 
 
-class Page(SingletonMixin, tk.Frame):
+class Page(SingletonMixin, ttk.Frame):
     w_title = ''
 
     def __init__(self, parent, **kwargs):
         self.w_parent = parent
-        super().__init__(parent)
-        self.init_config(parent, **kwargs)
+        kwargs['style'] = kwargs.get('style', style.PAGE)
+        super().__init__(parent, **kwargs)
+        self.init_config(parent)
 
     def init_config(self, parent, **kwargs):
         pass
@@ -77,3 +78,16 @@ class TtkPage(SingletonMixin, ttk.Frame):
         self.set_title()
         self.before_show()
         self.lift()
+
+
+class LabelInput(ttk.Frame):
+    def __init__(self, parent,
+            w_class=None,           # tk/ttk widget class
+            w_label=None,           # text for the label widget
+            w_var=None,             # variable bound to this input
+            w_label_config=None,    # config for the label widget
+            w_input_config=None,    # config for the input widget
+            **kwargs,               # for the Frame
+    ):
+        self.w_parent = parent
+        super().__init__(parent, **kwargs)

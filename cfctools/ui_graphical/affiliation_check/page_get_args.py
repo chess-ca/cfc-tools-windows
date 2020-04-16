@@ -7,21 +7,21 @@ import tkinter as tk
 
 class Page(widgets.Page):
     def init_config(self, parent, **kwargs):
-        self.config(bg=m.app.c_off_white)
+        self.config(padding=(16,16,16,16),)
 
-        tk.Label(self, **style.TEXT_REGULAR(padx=16, pady=16),
+        ttk.Label(self,
             text='Affiliation Check',
-        ).grid(row=1, column=0, sticky=tk.W,)
+        ).grid(row=0, column=0, sticky=tk.W,)
 
         # ttk.Button(self, **v.style.BUTTON(),
         #     text='Go ...',
         #     command=callbacks.CB_CFC_MDB_UPDATE,
         # ).grid(row=2, column=0, sticky=tk.NE,)
 
-        tk.Label(self, **v.style.TEXT_REGULAR(padx=16, justify='left'),
+        tk.Label(self,
             text='Find members where the province of their address'
                 '\ndoes not match the province of their membership affiliation.',
-        ).grid(row=2, column=2, sticky=tk.NW,)
+        ).grid(row=1, column=1, sticky=tk.NW,)
 
 
 def get_page(parent=None):

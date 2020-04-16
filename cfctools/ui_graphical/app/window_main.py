@@ -10,10 +10,7 @@ class Window(widgets.Window):
         Window._singleton = self
 
         super().__init__()
-        self.configure(
-            width=800, height=600,
-            bg=m.app.c_off_white,
-        )
+        self.configure(bg=style.c_bg,)
         self.minsize(width=800, height=600)
         style.init_style(main_tk=self)
 
@@ -25,19 +22,17 @@ class Window(widgets.Window):
         _WindowFoot(self).pack(fill=tk.X)
 
 
-class _WindowHead(tk.Frame):
+class _WindowHead(ttk.Frame):
     def __init__(self, parent):
-        super().__init__(parent)
-        self.configure(bg=m.app.c_header_bg)
+        super().__init__(parent, style='WindowHead.TFrame')
 
-        tk.Label(self,
+        ttk.Label(self, style='WindowHead.TLabel',
             text=m.app.title,
-            padx=16, pady=16,
-            **style.TEXT_BANNER(),
+            padding=(16,16,16,16,),
         ).pack(anchor=tk.W)
 
 
-class _WindowBody(tk.Frame):
+class _WindowBody(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -53,16 +48,13 @@ class _WindowBody(tk.Frame):
         home.c_show_home()
 
 
-class _WindowFoot(tk.Frame):
+class _WindowFoot(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
-        # self.configure()
 
-        tk.Label(self,
+        ttk.Label(self,
             text=f'Version: {m.app.version}',
-            padx=8, pady=2,
-            fg=m.app.c_text,
-        ).pack(anchor=tk.E)
+        ).pack(anchor=tk.E, padx=8, pady=2,)
 
 
 def get_window(parent=None):
