@@ -1,6 +1,7 @@
 
 from .. import datamappers as dm
 
+# >>>> Not needed!?!?  The filedialog already remembers the last directory
 
 class PreferencesForWindows:
     def __init__(self, subkeys=None):

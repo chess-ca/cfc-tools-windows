@@ -1,7 +1,8 @@
 
 from . import style
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
+import pathlib, types
 
 
 class SingletonMixin:
@@ -34,6 +35,7 @@ class Page(SingletonMixin, ttk.Frame):
 
     def __init__(self, parent, **kwargs):
         self.w_parent = parent
+        self.w_vars = types.SimpleNamespace()
         kwargs['style'] = kwargs.get('style', style.PAGE)
         super().__init__(parent, **kwargs)
         self.init_config(parent)
@@ -80,14 +82,62 @@ class TtkPage(SingletonMixin, ttk.Frame):
         self.lift()
 
 
-class LabelInput(ttk.Frame):
+class LabelEntry(ttk.Frame):
     def __init__(self, parent,
-            w_class=None,           # tk/ttk widget class
-            w_label=None,           # text for the label widget
-            w_var=None,             # variable bound to this input
-            w_label_config=None,    # config for the label widget
-            w_input_config=None,    # config for the input widget
+            label,                  # text for the label widget
+            w_var,                  # variable bound to this input
+            label_config=None,      # config for the label widget
+            input_config=None,      # config for the input widget
             **kwargs,               # for the Frame
     ):
         self.w_parent = parent
         super().__init__(parent, **kwargs)
+        label = label or ''
+        label_config = label_config or {}
+        input_config = input_config or {}
+        input_config['textvariable'] = w_var
+
+        self.grid_columnconfigure(0, weight=1)
+        self.label = ttk.Label(self, text=label, style=style.LABEL_INPUT, **label_config)
+        self.label.grid(row=0, column=0, sticky=tk.EW)
+        self.input = ttk.Entry(self, style=style.ENTRY_INPUT, **input_config)
+        self.input.grid(row=1, column=0, sticky=tk.EW)
+
+
+class LabelFileEntry(ttk.Frame):
+    def __init__(self, parent,
+            # widget=None,            # tk/ttk widget class
+            label,                  # text for the label widget
+            w_var,                  # variable bound to this input
+            initialdir,             # initial directory for file
+            filetypes=None,         #
+            label_config=None,      # config for the label widget
+            input_config=None,      # config for the input widget
+            **kwargs,               # for the Frame
+    ):
+        super().__init__(parent, **kwargs)
+        self.w_parent = parent
+        self.w_var = w_var
+        self.w_initialdir = initialdir
+        self.w_filetypes = filetypes or []
+        self.label = label or ''
+        label_config = label_config or {}
+        input_config = input_config or {}
+        input_config['textvariable'] = self.w_var
+
+        self.grid_columnconfigure(0, weight=1)
+        self.label = ttk.Label(self, text=self.label, style=style.LABEL_INPUT, **label_config)
+        self.label.grid(row=0, column=0, sticky=tk.EW)
+        self.input = ttk.Entry(self, style=style.ENTRY_INPUT, **input_config)
+        self.input.grid(row=1, column=0, sticky=tk.EW)
+        self.select = ttk.Button(self, text='select', width=6, style=style.FILE_BUTTON,
+            command=self.filedialog)
+        self.select.grid(row=1, column=1, sticky=tk.E)
+
+    def filedialog(self):
+        initdir = self.w_initialdir.get() or 'c:/'
+        fp = filedialog.askopenfilename(title=self.label, initialdir=initdir, filetypes=self.w_filetypes)
+        fp = pathlib.Path(fp)
+        if fp.exists() and not fp.is_dir():
+            self.w_var.set(str(fp).replace('/', '\\'))
+            self.w_initialdir.set(str(fp.parent))

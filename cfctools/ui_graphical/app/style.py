@@ -19,19 +19,26 @@ c_bg = '#fefbf6'
 # ==== ==== ==== ==== TTK: Style for ttk Widgets
 PAGE = 'TFrame'
 LABEL = 'TLabel'
+LABEL_INPUT = 'Input.TLabel'
+ENTRY_INPUT = 'Input.TEntry'
+FILE_BUTTON = 'File.TButton'
 
 _font_family = 'Calibri'
-_font = (_font_family, 14)
+_font = f'{_font_family} 14'
 _bg = dict(background=c_bg)
 _fgbg = dict(foreground=c_text, background=c_bg)
 
 _styles = {
-    'TFrame': dict(**_bg),
+    PAGE: dict(**_bg),
     'WindowHead.TFrame': dict(background=c_p400,),
+    'Input.TFrame': dict(background='red',),
     'TLabel': dict(font=_font, padx=8, **_fgbg),
-    'WindowHead.TLabel': dict(font=(_font_family, 24, 'bold'), background=c_p400),
+    'WindowHead.TLabel': dict(font=f'{_font_family} 24 bold', background=c_p400),
+    'Input.TLabel': dict(font=f'{_font_family} 12'),
     'TLabelframe': dict(padding=(12,12,), **_bg),
     'TLabelframe.Label': dict(**_fgbg),
+    'Input.TEntry': dict(),
+    'File.TButton': dict(padding=(-2,-2,)),
     'TButton': dict(font=(_font_family, 12),),
 }
 
@@ -53,3 +60,9 @@ TK_MENU = partial(_style, dict(
     fg=c_text, bg=c_bg,
     font=dict(size=18, family='Calibri'),
 ))
+
+# ======================================================================
+# Notes:
+#   - Ttk styles cannot be set before the Tk() object is created.
+#     Therefore, must be set in a call to "init_style" function
+#     instead of when this module is imported.
