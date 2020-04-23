@@ -9,5 +9,6 @@ CFC Tools for Windows for the Business Office.  Tools that must run on Windows (
   * `py -3.8-32 -m venv venv`
   * `venv\scripts\activate`
 * Python Packages: to install the required packages:
+  * `python -m pip install --upgrade pip`
   * `python -m pip install -r requirements.txt`
   

@@ -1,5 +1,4 @@
 
-from ... import models as m
 from ..app import widgets, style, callbacks
 import tkinter as tk
 from tkinter import ttk
@@ -80,7 +79,7 @@ class Page(widgets.Page):
         f4 = ttk.Frame(self)
         ttk.Button(f4,
             text='Update .mdb',
-            command=self.update(),
+            command=self.update,
         ).pack(side=tk.LEFT, padx=8,)
         ttk.Button(f4,
             text='Cancel',
@@ -89,7 +88,12 @@ class Page(widgets.Page):
         f4.grid(row=4, column=0, columnspan=3, sticky=tk.SW,)
 
     def update(self):
-        pass
+        callbacks.CB_CFC_MDB_UPDATE_RUN(
+            members_xlsx=self.w_vars.members_xlsx.get(),
+            fields_xlsx=self.w_vars.fields_xlsx.get(),
+            cfc_mdb=self.w_vars.cfc_mdb.get(),
+            cfc_mdb_pw=self.w_vars.cfc_mdb_pw.get(),
+        )
 
 
 def get_page(parent=None):
