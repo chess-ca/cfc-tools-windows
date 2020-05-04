@@ -144,6 +144,9 @@ def _is_file(filename):
 
 
 def _to_mdb_format(members_row=None, fields_row=None):
+    # Note: MS-Access has a "Allow zero length" property for text fields.
+    #   In cfc.mdb, most text fields do not "allow zero length" which
+    #   means attempting to set to "" (zero length) causes an error.
     mdb = {}
     if members_row:
         # Has: MID, First Name, Last Name, Email Address, Date of Birth, Gender,
@@ -157,6 +160,9 @@ def _to_mdb_format(members_row=None, fields_row=None):
         # Note: .mdb requires None or non-zero length string
         mdb['SEX'] = 'M' if g == 'Male' else 'F' if g == 'Female' else None
         mdb['ADDRESS'] = _fmt_val(r['Address Line 1'], type=str)
+        aline2 = _fmt_val(r['Address Line 2'], type=str)
+        if aline2 != ' ':
+            mdb['ADDRESS'] = f'; {aline2}'
         mdb['CITY'] = _fmt_val(r['Town'], type=str)
         mdb['PROV'] = utils._province_to_pp(r['County'])
         mdb['BIRTHDATE'] = r['Date of Birth']               # datetime
@@ -174,7 +180,11 @@ def _to_mdb_format(members_row=None, fields_row=None):
 
 def _fmt_val(val, type=None):
     if type == str:
-        val = str(val or '').strip()
+        if val is None:
+            val = ' '
+        val = str(val).strip()
+        if val == '':       # In cfc.mdb, text fields have "Allow zero length" set to "no".
+            val = ' '
     elif type == float:
         try:
             val = str(val or '').strip()
