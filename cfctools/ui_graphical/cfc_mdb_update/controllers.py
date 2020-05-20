@@ -10,13 +10,12 @@ def c_get_args(*args, **kwargs):
     page.show()
 
 
-def c_do_update(members_xlsx, fields_xlsx, cfc_mdb, cfc_mdb_pw):
+def c_do_update(members_xlsx, cfc_mdb, cfc_mdb_pw):
     page = page_run.get_page()
     page.reset()
     page.show()
     args = dict(
         members_xlsx=members_xlsx,
-        fields_xlsx=fields_xlsx,
         cfc_mdb=cfc_mdb,
         cfc_mdb_pw=cfc_mdb_pw,
     )

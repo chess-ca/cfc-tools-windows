@@ -9,7 +9,6 @@ class Page(widgets.Page):
     def init_config(self, parent, **kwargs):
         self.w_vars.initialdir = tk.StringVar()
         self.w_vars.members_xlsx = tk.StringVar()
-        self.w_vars.fields_xlsx = tk.StringVar()
         self.w_vars.cfc_mdb = tk.StringVar()
         self.w_vars.cfc_mdb_pw = tk.StringVar()
 
@@ -35,20 +34,12 @@ class Page(widgets.Page):
         f1.grid_columnconfigure(0, weight=1)
         f1w1 = widgets.LabelFileEntry(
             parent=f1,
-            label='"All Members" report from GoMembership (.xlsx):',
+            label='"All Members With Custom Field" report from GoMembership (.xlsx):',
             w_var=self.w_vars.members_xlsx,
             initialdir=self.w_vars.initialdir,
             filetypes=[('xlxs files', '*.xlsx'),('all files', '*.*')],
         )
         f1w1.grid(row=0, column=0, sticky=tk.EW)
-        f1w2 = widgets.LabelFileEntry(
-            parent=f1,
-            label='"Members and Fields (NGB)" report from GoMembership (.xlsx):',
-            w_var=self.w_vars.fields_xlsx,
-            initialdir=self.w_vars.initialdir,
-            filetypes=[('xlxs files', '*.xlsx'),('all files', '*.*')],
-        )
-        f1w2.grid(row=1, column=0, sticky=tk.EW)
         f1.grid(row=1, column=1, sticky=tk.EW)
 
         # ---- ---- Updated File
@@ -90,7 +81,6 @@ class Page(widgets.Page):
     def update(self):
         callbacks.CB_CFC_MDB_UPDATE_RUN(
             members_xlsx=self.w_vars.members_xlsx.get(),
-            fields_xlsx=self.w_vars.fields_xlsx.get(),
             cfc_mdb=self.w_vars.cfc_mdb.get(),
             cfc_mdb_pw=self.w_vars.cfc_mdb_pw.get(),
         )

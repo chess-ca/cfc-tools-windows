@@ -4,13 +4,11 @@ from . import utils
 import sys, pathlib, datetime
 
 
-def update(members_xlsx, fields_xlsx, cfc_mdb, cfc_mdb_pw):
+def update(members_xlsx, cfc_mdb, cfc_mdb_pw):
     failed = False
     steps = [_check_cfc_mdb_file(cfc_mdb)]
     if members_xlsx.strip() != '':
         steps.append(_process_members(members_xlsx, cfc_mdb, cfc_mdb_pw))
-    if fields_xlsx.strip() != '':
-        steps.append(_process_fields(fields_xlsx, cfc_mdb, cfc_mdb_pw))
     try:
         for step in steps:
             if failed:
@@ -45,9 +43,9 @@ def _check_cfc_mdb_file(cfc_mdb):
 
 # ======================================================================
 def _process_members(members_xlsx, cfc_mdb, cfc_mdb_pw):
-    ws_name = 'Data'
+    ws_name = 'All Members'
 
-    yield f'Reading from "All Members" report:\n - File: {members_xlsx}\n'
+    yield f'Reading from "All Members With Custom Field" report:\n - File: {members_xlsx}\n'
 
     emsg = _is_file(members_xlsx)
     if type(emsg) == str:
@@ -81,52 +79,13 @@ def _process_members(members_xlsx, cfc_mdb, cfc_mdb_pw):
         unequal_cols = _get_unequal_cols(mdb_row, ws_row)
         if len(unequal_cols) > 0:
             n_updated += 1
+            # FOR DEBUGGING:
+            # if n_updated > 100 and n_updated < 121:
+            #     yield f'   mid={ws_row["NUMBER"]}, cols={unequal_cols}'
             mdb.update(ws_row, unequal_cols)
         if n_read % 10000 == 0:
             yield f'   ... {n_read:,} read; {n_updated:,} members updated; {n_added} members added\n'
     yield f'   Finished: {n_read} read; {n_updated:,} members updated; {n_added} members added\n'
-
-
-# ======================================================================
-def _process_fields(fields_xlsx, cfc_mdb, cfc_mdb_pw):
-    ws_name = 'FieldEditor_NGB'
-
-    yield f'Reading "Members and Fields (NGB)" report:\n - File: {fields_xlsx}\n'
-
-    emsg = _is_file(fields_xlsx)
-    if type(emsg) == str:
-        yield f' - {emsg}'
-        yield False
-        return
-
-    mdb = utils.MDB(cfc_mdb, cfc_mdb_pw, 'Membership Information', 'NUMBER')
-    n_read, n_updated = 0, 0
-    xlsx = utils.XLSX(fields_xlsx, ws_name)
-
-    for ws_row in xlsx.get_all():
-        n_read += 1
-        # if n_read < 10123:
-        #     continue
-        # if n_read > 10126:
-        #     break
-
-        ws_row = _to_mdb_format(fields_row=ws_row)
-        if ws_row['NUMBER'] is None:
-            continue        # an empty row in the spreadsheet
-        if int(ws_row['NUMBER']) < 100000:
-            continue        # a dummy CFC id
-
-        mdb_row = mdb.get_id(ws_row['NUMBER'])
-        if mdb_row is None:
-            continue        # cannot add member since only have minimal info
-
-        unequal_cols = _get_unequal_cols(mdb_row, ws_row)
-        if len(unequal_cols) > 0:
-            n_updated += 1
-            mdb.update(ws_row, unequal_cols)
-        if n_read % 10000 == 0:
-            yield f'   ... {n_read:,} read; {n_updated:,} members updated\n'
-    yield f'   Finished: {n_read} read; {n_updated:,} members updated\n'
 
 
 # ======================================================================
@@ -151,14 +110,15 @@ def _to_mdb_format(members_row=None, fields_row=None):
     if members_row:
         # Has: MID, First Name, Last Name, Email Address, Date of Birth, Gender,
         #       Address Line 1, Address Line 2, Town, County, Postcode, Country,
-        #       Member State, Membership, Membership Expiry, Primary Club, Additional Clubs
+        #       Member State, Membership Type, Membership Expiry, Membership State,
+        #       FIDE Membership Id, Provincial Affiliation
         r = members_row
         mdb['NUMBER'] = _fmt_val(r['MID'], type=float)                # float
         mdb['FIRST'] = _fmt_val(r['First Name'], type=str)
         mdb['LAST'] = _fmt_val(r['Last Name'], type=str)
-        g = _fmt_val(r['Gender'], type=str)
+        g = _fmt_val(r['Gender'], type=str).upper()
         # Note: .mdb requires None or non-zero length string
-        mdb['SEX'] = 'M' if g == 'Male' else 'F' if g == 'Female' else None
+        mdb['SEX'] = 'M' if g == 'MALE' else 'F' if g == 'FEMALE' else None
         mdb['ADDRESS'] = _fmt_val(r['Address Line 1'], type=str)
         aline2 = _fmt_val(r['Address Line 2'], type=str)
         if aline2 != ' ':
@@ -169,12 +129,10 @@ def _to_mdb_format(members_row=None, fields_row=None):
         mdb['EXPIRY'] = r['Membership Expiry']              # datetime
         mdb['Email'] = _fmt_val(r['Email Address'], type=str)
         mdb['POSTCODE'] = _fmt_val(r['Postcode'], type=str)
+        mdb['FIDE NUMBER'] = _fmt_val(r['FIDE Membership Id'], type=float)
     elif fields_row:
-        # Has: MID, Firstname, Lastname, Category, Expiry,
-        #       Additional Info - FIDE Membership Id, Additional Info - Provincial Affiliation
-        r = fields_row
-        mdb['NUMBER'] = _fmt_val(r['MID'], type=float)                # float
-        mdb['FIDE NUMBER'] = _fmt_val(r['Additional Info - FIDE Membership Id'], type=float)
+        # REMOVED: no longer using the membership fields report/.xlsx
+        pass
     return mdb
 
 
