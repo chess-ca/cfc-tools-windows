@@ -1,55 +1,53 @@
 
+import logging, sys, pathlib, datetime, sqlite3, re
 from .. import models as m
 from . import utils
-import sys, pathlib, datetime, sqlite3, re
+
+_console = logging.getLogger('console')
+_OKAY = True
 
 _sqlite_file = None
 
 def create(cfc_mdb, cfc_mdb_pw):
-    failed = False
-    steps = [
-        _check_cfc_mdb_file(cfc_mdb),
-        _create_sqlite_tables(cfc_mdb),
-        _extract_player_data(cfc_mdb, cfc_mdb_pw),
-        _extract_tournament_data(cfc_mdb, cfc_mdb_pw),
-        _create_sqlite_indices(cfc_mdb),
-    ]
+    _console.info('Extracting from MS-Access using CFC-Tools version %s', m.app.version)
+
     try:
-        for step in steps:
-            if failed:
-                break
-            for msg in step:
-                if msg is False:
-                    failed = True
-                    break
-                else:
-                    yield msg
+        okay = _check_cfc_mdb_file(cfc_mdb)
+        if okay:
+            okay = _create_sqlite_tables(cfc_mdb)
+        if okay:
+            okay = _extract_player_data(cfc_mdb, cfc_mdb_pw)
+        if okay:
+            okay = _extract_tournament_data(cfc_mdb, cfc_mdb_pw)
+        if okay:
+            okay = _create_sqlite_indices(cfc_mdb)
     except:
-        failed = True
+        okay = not _OKAY
         excp = sys.exc_info()
-        emsg = f'{"-"*64}\nEXCEPTION: {excp[0]}\n'
-        emsg += f'{excp[1]}\n{"-"*64}\n'
-        yield emsg
-    if failed:
-        yield f'\nFAILED!  Fix error and re-run'
+        emsg = ('-'*64) + '\nEXCEPTION: %s\n%s\n' + ('-'*64)
+        _console.error(emsg, excp[0], excp[1])
+
+    if okay:
+        _console.info('\nSUCCESS!  Ratings database created')
     else:
-        yield f'\nSUCCESS!  Ratings database created'
+        _console.info('\nFAILED!  Fix error and re-run')
 
 
 # ======================================================================
 def _check_cfc_mdb_file(cfc_mdb):
     ver = m.app.version
-    yield f'Reading CFC database (with CFC-Tools {ver}):\n - File: {cfc_mdb}\n'
+    _console.info('Extracting from %s', cfc_mdb)
     emsg = _is_file(cfc_mdb)
     if type(emsg) == str:
-        yield f' - {emsg}'
-        yield False
+        _console.error(f' - {emsg}')
+        return not _OKAY
+    return _OKAY
 
 
 # ======================================================================
 def _create_sqlite_tables(cfc_mdb):
     global _sqlite_file
-    yield f'Creating SQLite tables ...\n'
+    _console.info(f'Creating SQLite tables ...')
 
     # ---- SQLite
     _sqlite_file = pathlib.Path(cfc_mdb).with_suffix('.ratings.sqlite')
@@ -94,17 +92,17 @@ def _create_sqlite_tables(cfc_mdb):
 
     dbcon.commit()
     dbcon.close()
-    yield f'   SQLite tables created.\n'
+    _console.info(f'   SQLite tables created.')
+    return _OKAY
 
 
 # ======================================================================
 def _create_sqlite_indices(cfc_mdb):
-    yield f'Creating SQLite indices ...\n'
+    _console.info(f'Creating SQLite indices ...')
 
     if not _sqlite_file:
-        yield f'    ERROR: SQLite file not defined'
-        yield False
-        return
+        _console.info(f'    ERROR: SQLite file not defined')
+        return not _OKAY
     dbcon = sqlite3.connect(_sqlite_file)
     dbcon.execute('CREATE INDEX ix_player_1 ON player (m_id)')
     dbcon.execute('CREATE INDEX ix_player_2 ON player (last_lc, first_lc)')
@@ -113,17 +111,17 @@ def _create_sqlite_indices(cfc_mdb):
     dbcon.execute('CREATE INDEX ix_crosstable_2 ON crosstable (m_id)')
     dbcon.commit()
     dbcon.close()
-    yield f'   SQLite indices created.\n'
+    _console.info('   SQLite indices created.')
+    return _OKAY
 
 
 # ======================================================================
 def _extract_player_data(cfc_mdb, cfc_mdb_pw):
-    yield f'Copying player data into the SQLite database ...\n'
+    _console.info('Copying player data into the SQLite database ...')
     n_read, n_added = 0, 0
     if not _sqlite_file:
-        yield f'    ERROR: SQLite file not defined'
-        yield False
-        return
+        _console.info('    ERROR: SQLite file not defined')
+        return not _OKAY
 
     dbcon = sqlite3.connect(_sqlite_file)
     mdb = utils.MDB(cfc_mdb, cfc_mdb_pw, 'Membership Information', 'NUMBER')
@@ -158,21 +156,21 @@ def _extract_player_data(cfc_mdb, cfc_mdb_pw):
         if n_added % 1000 == 0:
             dbcon.commit()
         if n_added % 25000 == 0:
-            yield f'   ... added {n_added:,}'
+            _console.info(f'   ... added {n_added:,}')
 
     dbcon.commit()
     dbcon.close()
-    yield f'   Finished: {n_added:,} players added\n'
+    _console.info(f'   Finished: {n_added:,} players added')
+    return _OKAY
 
 
 # ======================================================================
 def _extract_tournament_data(cfc_mdb, cfc_mdb_pw):
-    yield f'Copying tournament data into the SQLite database ...\n'
+    _console.info('Copying tournament data into the SQLite database ...')
     n_read, n_tournaments, n_crosstables = 0, 0, 0
     if not _sqlite_file:
-        yield f'    ERROR: SQLite file not defined'
-        yield False
-        return
+        _console.info('    ERROR: SQLite file not defined')
+        return not _OKAY
 
     re_spaces = re.compile(r'\s+')
     dbcon = sqlite3.connect(_sqlite_file)
@@ -233,24 +231,24 @@ def _extract_tournament_data(cfc_mdb, cfc_mdb_pw):
         if n_crosstables % 1000 == 0:
             dbcon.commit()
         if n_crosstables % 50000 == 0:
-            yield f'   ... added {n_crosstables:,}'
+            _console.info(f'   ... added {n_crosstables:,}')
 
     dbcon.commit()
     dbcon.close()
-    yield f'   Finished: {n_crosstables:,} player results and {n_tournaments:,} tournaments added\n'
+    _console.info(f'   Finished: {n_crosstables:,} player results and {n_tournaments:,} tournaments added')
+    return _OKAY
 
 
 # ======================================================================
 def _process_members(members_xlsx, cfc_mdb, cfc_mdb_pw):
     ws_name = 'All Members'
 
-    yield f'Reading from "All Members With Custom Field" report:\n - File: {members_xlsx}\n'
+    _console.info(f'Reading from "All Members With Custom Field" report:\n - File: {members_xlsx}')
 
     emsg = _is_file(members_xlsx)
     if type(emsg) == str:
-        yield f' - {emsg}'
-        yield False
-        return
+        _console.info(f' - {emsg}')
+        return not _OKAY
 
     mdb = utils.MDB(cfc_mdb, cfc_mdb_pw, 'Membership Information', 'NUMBER')
     n_read, n_added, n_updated = 0, 0, 0
@@ -280,11 +278,12 @@ def _process_members(members_xlsx, cfc_mdb, cfc_mdb_pw):
             n_updated += 1
             # FOR DEBUGGING:
             # if n_updated > 100 and n_updated < 121:
-            #     yield f'   mid={ws_row["NUMBER"]}, cols={unequal_cols}'
+            #     _console.info(f'   mid={ws_row["NUMBER"]}, cols={unequal_cols}')
             mdb.update(ws_row, unequal_cols)
         if n_read % 10000 == 0:
-            yield f'   ... {n_read:,} read; {n_updated:,} members updated; {n_added} members added\n'
-    yield f'   Finished: {n_read} read; {n_updated:,} members updated; {n_added} members added\n'
+            _console.info(f'   ... {n_read:,} read; {n_updated:,} members updated; {n_added:,} members added')
+    _console.info(f'   Finished: {n_read:,} read; {n_updated:,} members updated; {n_added:,} members added')
+    return _OKAY
 
 
 # ======================================================================
