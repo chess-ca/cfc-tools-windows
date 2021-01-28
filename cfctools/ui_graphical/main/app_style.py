@@ -58,7 +58,7 @@ def _style(defaults, **overrides):
 
 TK_MENU = partial(_style, dict(
     fg=c_text, bg=c_bg,
-    font=dict(size=18, family='Calibri'),
+    font=dict(size=12, family='Calibri'),
 ))
 
 # ======================================================================

@@ -1,4 +1,10 @@
-# views_gui
+# ui_graphical Guide
+
+# Widget Hierarchy
+
+* Window: app/window_main.py
+  *
+
 
 # Tkinter Tips & Reference
 

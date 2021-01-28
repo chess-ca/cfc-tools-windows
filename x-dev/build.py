@@ -2,8 +2,8 @@
 import pathlib as pl
 import zipapp
 
-dir_app = pl.Path(__file__).parent
-f_pyzw = dir_app / 'CFC-Tools.pyzw'
+dir_app = pl.Path(__file__).parents[1]
+f_pyzw = dir_app / 'x-dev' / 'CFC-Tools.pyzw'
 
 
 def myfilter(filepath):
@@ -22,7 +22,7 @@ def myfilter(filepath):
 zipapp.create_archive(
     dir_app,
     target=f_pyzw,
-    # main=None,
+    main='cfctools.application:run',
     filter=myfilter,
     compressed=True,
 )

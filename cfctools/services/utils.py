@@ -59,8 +59,15 @@ class MDB:
         self.key = key
         self.dbconn = None
 
-    # def get_all(self):
-    #     pass
+    def get_all(self, sort=None):
+        dbcsr = self._get_dbconn().cursor()
+        sql = f'select * from "{self.table}"'
+        if sort:
+            sql += ' order by ' + sort
+        dbcsr.execute(sql)
+        for row in dbcsr.fetchall():
+            yield row
+        dbcsr.close()
 
     def get_id(self, id):
         id = float(id)

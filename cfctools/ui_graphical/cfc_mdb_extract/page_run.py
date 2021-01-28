@@ -3,11 +3,12 @@ import tkinter as tk, threading
 from tkinter import ttk
 import cfctools.ui_graphical.application as app
 from ..main import app_widgets
-from ...services import cfc_mdb_update
+from ...services import extract_from_mdb
 
 
 class RunPage(app_widgets.Page):
     def init_widget(self, parent, **kwargs):
+
         # ==== ==== ==== ==== Page Widgets
         self.config(padding=(16,16,16,16),)
         for i in [0,1,2,3]:
@@ -16,7 +17,7 @@ class RunPage(app_widgets.Page):
         self.grid_columnconfigure(1, weight=1)
 
         ttk.Label(self,
-            text='Updating cfc.mdb:', anchor=tk.W,
+            text='Extracting from a cfc*.mdb:', anchor=tk.W,
         ).grid(row=0, column=0, columnspan=3, sticky=tk.SW,)
 
         # ---- ---- Update Log
@@ -46,9 +47,9 @@ class RunPage(app_widgets.Page):
 class _Worker(threading.Thread):
     def __init__(self, **kwargs):
         super().__init__()
-        self.members_xlsx = kwargs.get('members_xlsx')
         self.cfcmdb = kwargs.get('cfcmdb')
         self.cfcmdb_pw = kwargs.get('cfcmdb_pw')
+        self.updated_text = kwargs.get('updated_text', '')
 
     def run(self):
-        cfc_mdb_update.update(self.members_xlsx, self.cfcmdb, self.cfcmdb_pw)
+        extract_from_mdb.extract(self.cfcmdb, self.cfcmdb_pw, self.updated_text)

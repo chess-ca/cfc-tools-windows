@@ -1,57 +1,51 @@
 
+import logging, sys, pathlib, datetime
 from .. import models as m
 from . import utils
-import sys, pathlib, datetime
+
+_console = logging.getLogger('console')
+_OKAY = True
 
 
 def update(members_xlsx, cfc_mdb, cfc_mdb_pw):
-    failed = False
-    steps = [_check_cfc_mdb_file(cfc_mdb)]
-    if members_xlsx.strip() != '':
-        steps.append(_process_members(members_xlsx, cfc_mdb, cfc_mdb_pw))
+    _console.info('Updating a CFC MS-Access database using CFC-Tools version %s', m.app.version)
+
     try:
-        for step in steps:
-            if failed:
-                break
-            for msg in step:
-                if msg is False:
-                    failed = True
-                    break
-                else:
-                    yield msg
+        okay = _check_cfc_mdb_file(cfc_mdb)
+        if okay:
+            okay = _process_members(members_xlsx, cfc_mdb, cfc_mdb_pw)
     except:
-        failed = True
+        okay = not _OKAY
         excp = sys.exc_info()
-        emsg = f'{"-"*64}\nEXCEPTION: {excp[0]}\n'
-        emsg += f'{excp[1]}\n{"-"*64}\n'
-        yield emsg
-    if failed:
-        yield f'\nFAILED!  Fix error and re-run'
+        emsg = ('-'*64) + '\nEXCEPTION: %s\n%s\n' + ('-'*64)
+        _console.error(emsg, excp[0], excp[1])
+
+    if okay:
+        _console.info('\nSUCCESS!  All updating completed')
     else:
-        yield f'\nSUCCESS!  All updating completed'
+        _console.info('\nFAILED!  Fix error and re-run')
 
 
 # ======================================================================
 def _check_cfc_mdb_file(cfc_mdb):
-    ver = m.app.version
-    yield f'Updating CFC database (with CFC-Tools {ver}):\n - File: {cfc_mdb}\n'
+    _console.info('Updating %s', cfc_mdb)
     emsg = _is_file(cfc_mdb)
     if type(emsg) == str:
-        yield f' - {emsg}'
-        yield False
+        _console.error(' - %s', emsg)
+        return not _OKAY
+    return _OKAY
 
 
 # ======================================================================
 def _process_members(members_xlsx, cfc_mdb, cfc_mdb_pw):
     ws_name = 'All Members'
 
-    yield f'Reading from "All Members With Custom Field" report:\n - File: {members_xlsx}\n'
+    _console.info(f'Reading from "All Members With Custom Field" report:\n - File: {members_xlsx}')
 
     emsg = _is_file(members_xlsx)
     if type(emsg) == str:
-        yield f' - {emsg}'
-        yield False
-        return
+        _console.error(f' - {emsg}')
+        return not _OKAY
 
     mdb = utils.MDB(cfc_mdb, cfc_mdb_pw, 'Membership Information', 'NUMBER')
     n_read, n_added, n_updated = 0, 0, 0
@@ -81,11 +75,12 @@ def _process_members(members_xlsx, cfc_mdb, cfc_mdb_pw):
             n_updated += 1
             # FOR DEBUGGING:
             # if n_updated > 100 and n_updated < 121:
-            #     yield f'   mid={ws_row["NUMBER"]}, cols={unequal_cols}'
+            #     _console.info(f'   mid={ws_row["NUMBER"]}, cols={unequal_cols}')
             mdb.update(ws_row, unequal_cols)
         if n_read % 10000 == 0:
-            yield f'   ... {n_read:,} read; {n_updated:,} members updated; {n_added} members added\n'
-    yield f'   Finished: {n_read} read; {n_updated:,} members updated; {n_added} members added\n'
+            _console.info(f'   ... {n_read:,} read; {n_updated:,} members updated; {n_added:,} members added')
+    _console.info(f'   Finished: {n_read:,} read; {n_updated:,} members updated; {n_added:,} members added')
+    return _OKAY
 
 
 # ======================================================================

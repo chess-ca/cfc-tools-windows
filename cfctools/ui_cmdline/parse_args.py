@@ -1,7 +1,7 @@
 
 import argparse
 
-def args_parse():
+def parse_args():
     ap = argparse.ArgumentParser(description='CFC Tools for Business Office tasks')
     # --- Action to perform (if not specified, invoke graphical UI)
     ap.add_argument('-a', '--action', dest='action',
