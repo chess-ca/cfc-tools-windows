@@ -1,22 +1,15 @@
 
 import os, sys, io, pathlib, logging, datetime, re
 from .. import models as m
-from ..common.models.member import Member
-from ..common.models.event import Event
-from ..common.models.event_result import EventResult
-from ..common.datamappers.job import JobFile
+from ..models.member import Member
+from ..models.event import Event
+from ..models.event_result import EventResult
+from ..datamappers.job import JobFile
 from ..datamappers.cfcmdb import CfcMdb
 from ..datamappers.csv import CsvInMemory
 
 _console = logging.getLogger('console')
 _OKAY = True
-
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# from . import utils
-#
-#
-# from ..datamappers.csv import CsvInMemory
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
 def extract(cfc_mdb, cfc_mdb_pw, updated_text=None):
@@ -107,7 +100,7 @@ def _extract_members(jobfile, cfc_mdb, cfc_mdb_pw):
 
 # ======================================================================
 def _extract_events(jobfile, cfc_mdb, cfc_mdb_pw):
-    year = 2019
+    year = 2019     # need only the latest years from cfc*.mdb
     total_events = 0
     _console.info('Extracting events starting from %d ...', year)
 
@@ -135,134 +128,11 @@ def _extract_events_for_year(year, jobfile, cfc_mdb, cfc_mdb_pw):
                 previous_event_id = event.id
             csv_results.writerow(result)
 
-    csv_events.flush_to_zipfile(f'{year}.events.csv', jobfile)
-    csv_results.flush_to_zipfile(f'{year}.event-results.csv', jobfile)
+    csv_events.flush_to_zipfile(f'ratings.{year}.events.csv', jobfile)
+    csv_results.flush_to_zipfile(f'ratings.{year}.results.csv', jobfile)
     if n_events > 0:
         _console.info(f'   ... For {year}, extracted {n_events:,} events.')
     return n_events
-
-
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# ======================================================================
-def _extract_tournament_data(cfc_mdb, cfc_mdb_pw):
-    yield f'Copying tournament data into the SQLite database ...\n'
-    n_read, n_tournaments, n_crosstables = 0, 0, 0
-    if not _sqlite_file:
-        yield f'    ERROR: SQLite file not defined'
-        yield False
-        return
-
-    re_spaces = re.compile(r'\s+')
-    dbcon = sqlite3.connect(_sqlite_file)
-    mdb = utils.MDB(cfc_mdb, cfc_mdb_pw, 'CROSSTABLES', 'TOURN NUMBER')
-    previous_tid = -1
-    for row in mdb.get_all(sort='"TOURN NUMBER", "FINISH POSITION"'):
-        n_read += 1
-        v_tid = getattr(row, 'TOURN NUMBER')
-        if v_tid != previous_tid:
-            v_pairings = getattr(row, 'STYLE')
-            v_pairings = 'SS' if v_pairings == 'S' \
-                else 'RR' if v_pairings == 'R' \
-                else v_pairings
-            v_type = getattr(row, 'TYPE')
-            v_type = 'Q' if v_type == 'A' \
-                else v_type
-            v_last_day = getattr(row, 'FINISH DATE')
-            v_last_day = '' if not v_last_day else v_last_day.strftime('%Y-%m-%d')
-            sqldata = dict(
-                t_id=v_tid,
-                name=getattr(row, 'TOURN NAME'),
-                last_day=v_last_day,
-                prov=getattr(row, 'PROVINCE'),
-                rounds=getattr(row, 'ROUNDS'),
-                pairings=v_pairings,
-                type=v_type,
-                org_m_id=getattr(row, 'ORG NUMBER'),
-            )
-            keys = sqldata.keys()
-            sql = 'INSERT INTO tournament (' + ', '.join(keys) \
-                  + ') VALUES (' + ','.join(['?' for k in keys]) + ')'
-            dbcon.execute(sql, [sqldata[k] for k in keys])
-            n_tournaments += 1
-            previous_tid = v_tid
-
-        v_results = getattr(row, 'RESULTS', '').strip().upper()
-        if 'X' in v_results:
-            v_results = '|'.join([c for c in v_results])
-        else:
-            v_results = re_spaces.sub('|', v_results)
-        sqldata = dict(
-            t_id=v_tid,
-            place=getattr(row, 'FINISH POSITION'),
-            m_id=getattr(row, 'CFC NUMBER'),
-            results=v_results,
-            score=getattr(row, 'TOTAL'),
-            games_played=getattr(row, 'GAMES PLAYED'),
-            rating_pre=getattr(row, 'PRE RATING'),
-            rating_perf=getattr(row, 'PERF RATING'),
-            rating_post=getattr(row, 'POST RATING'),
-            rating_hi=getattr(row, 'RATING INDICATOR'),
-        )
-        keys = sqldata.keys()
-        sql = 'INSERT INTO crosstable (' + ', '.join(keys) \
-              + ') VALUES (' + ','.join(['?' for k in keys]) + ')'
-        dbcon.execute(sql, [sqldata[k] for k in keys])
-        n_crosstables += 1
-        if n_crosstables % 1000 == 0:
-            dbcon.commit()
-        if n_crosstables % 50000 == 0:
-            yield f'   ... added {n_crosstables:,}'
-
-    dbcon.commit()
-    dbcon.close()
-    yield f'   Finished: {n_crosstables:,} player results and {n_tournaments:,} tournaments added\n'
-
-
-# ======================================================================
-def _process_members(members_xlsx, cfc_mdb, cfc_mdb_pw):
-    ws_name = 'All Members'
-
-    yield f'Reading from "All Members With Custom Field" report:\n - File: {members_xlsx}\n'
-
-    emsg = _is_file(members_xlsx)
-    if type(emsg) == str:
-        yield f' - {emsg}'
-        yield False
-        return
-
-    mdb = utils.MDB(cfc_mdb, cfc_mdb_pw, 'Membership Information', 'NUMBER')
-    n_read, n_added, n_updated = 0, 0, 0
-    xlsx = utils.XLSX(members_xlsx, ws_name)
-
-    for ws_row in xlsx.get_all():
-        n_read += 1
-        # if n_read < 10123:
-        #     continue
-        # if n_read > 10126:
-        #     break
-
-        ws_row = _to_mdb_format(members_row=ws_row)
-        if ws_row['NUMBER'] is None:
-            continue        # an empty row in the spreadsheet
-        if int(ws_row['NUMBER']) < 100000:
-            continue        # a dummy CFC id
-
-        mdb_row = mdb.get_id(ws_row['NUMBER'])
-        if mdb_row is None:
-            n_added += 1
-            mdb.insert(ws_row)
-            continue
-
-        unequal_cols = _get_unequal_cols(mdb_row, ws_row)
-        if len(unequal_cols) > 0:
-            n_updated += 1
-            # FOR DEBUGGING:
-            # if n_updated > 100 and n_updated < 121:
-            #     yield f'   mid={ws_row["NUMBER"]}, cols={unequal_cols}'
-            mdb.update(ws_row, unequal_cols)
-        if n_read % 10000 == 0:
-            yield f'   ... {n_read:,} read; {n_updated:,} members updated; {n_added} members added\n'
-    yield f'   Finished: {n_read} read; {n_updated:,} members updated; {n_added} members added\n'
 
 
 # ======================================================================

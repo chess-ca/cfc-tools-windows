@@ -26,6 +26,9 @@ class CsvInMemory:
         self._get_csv_writer().writerow(row)
         self._n_rows_in_current_csv += 1
 
+    def get_string(self):
+        return self._csv_iostr.getvalue()
+
     def flush_to_zipfile(self, filename, zipfile):
         if self._n_rows_in_current_csv == 0:
             return

@@ -9,9 +9,9 @@
 #   - Ref: https://github.com/mkleehammer/pyodbc/wiki/Tips-and-Tricks-by-Database-Platform
 # ======================================================================
 import pyodbc
-from ..common.models.member import Member
-from ..common.models.event import Event
-from ..common.models.event_result import EventResult
+from ..models.member import Member
+from ..models.event import Event
+from ..models.event_result import EventResult
 
 
 class CfcMdb:
@@ -51,7 +51,9 @@ class CfcMdb:
     def fetch_events_for_year(self, year, sort=None):
         year = int(year)
         sort = sort or '[TOURN NUMBER], [FINISH POSITION]'
-        table = 'CROSSTABLES'
+        table = 'CROSSTABLES'                   # Has [200601001; current++]
+        # table = 'crosstables2000-2001'          # Has [200001033; 200012105]
+        # table = 'CrosstablesBefore2000'         # Has [199607001; 200004004 + 200706020]
         range = [year*100000, year*100000+99999]
 
         dbcsr = self._get_dbconn().cursor()
@@ -78,6 +80,7 @@ def _mdb_to_member(row):
         gender=_fmt_code(row, 'SEX'),
         birthdate=_fmt_ymd(row, 'BIRTHDATE'),
         email=_fmt_str(row, 'Email'),
+        phone=_fmt_str(row, 'PHONE'),
         addr_line1=_fmt_str(row, 'ADDRESS'),
         addr_city=_fmt_str(row, 'CITY'),
         addr_province=_fmt_code(row, 'PROV'),
@@ -115,12 +118,13 @@ def _mdb_to_result(row):
         cfc_id=_fmt_int(row, 'CFC NUMBER'),
         province=_fmt_code(row, 'PLAYERS PROV'),
         games_played=_fmt_int(row, 'GAMES PLAYED'),
-        score=_fmt_int(row, 'TOTAL'),
-        results=EventResult.normalize_results(getattr(row, 'RESULTS')),
+        score=_fmt_float(row, 'TOTAL'),
+        results=EventResult.normalize_results(getattr(row, 'RESULTS'), getattr(row, 'TOURN NUMBER')),
         rating_type=_fmt_code(row, 'TYPE', {'A': 'Q'}),
         rating_pre=_fmt_int(row, 'PRE RATING'),
         rating_perf=_fmt_int(row, 'PERF RATING'),
         rating_post=_fmt_int(row, 'POST RATING'),
+        rating_indicator=_fmt_int(row, 'RATING INDICATOR')
     )
     return result
 
@@ -130,6 +134,10 @@ def _mdb_to_result(row):
 # ----------------------------------------------------------------------
 def _fmt_int(row, attr):
     return int(getattr(row, attr) or 0)
+
+
+def _fmt_float(row, attr):
+    return float(getattr(row, attr) or 0)
 
 
 def _fmt_str(row, attr):
@@ -150,17 +158,18 @@ def _fmt_code(row, attr, convert=None):
 
 
 # ======================================================================
-# Schema of cfc*.mdb:
+# cfc*.mdb Schema:
+# ======================================================================
 # - Table: "Membership Information":
-#         BATCH                   Date With Time          8
-#         SOURCE                  Short Text             10
+#         BATCH                   Date With Time          8     EXCLUDED
+#         SOURCE                  Short Text             10     EXCLUDED
 #         NUMBER                  Double                  8
 #         FIDE NUMBER             Long Integer            4
 #         EXPIRY                  Date With Time          8
-#         LAST EXPIRY             Date With Time          8
+#         LAST EXPIRY             Date With Time          8     EXCLUDED
 #         TYPE                    Short Text              1
-#         GIFT                    Short Text              1
-#         TD TYPE                 Long Integer            4
+#         GIFT                    Short Text              1     EXCLUDED
+#         TD TYPE                 Long Integer            4     EXCLUDED
 #         FIRST                   Short Text             50
 #         LAST                    Short Text             50
 #         ADDRESS                 Short Text             45
@@ -172,42 +181,43 @@ def _fmt_code(row, attr, convert=None):
 #         RATING                  Integer                 2
 #         INDICATOR               Integer                 2
 #         SEX                     Short Text              1
-#         SPECIAL                 Long Integer            4
+#         SPECIAL                 Long Integer            4     EXCLUDED (id of last tournament)
 #         ACT_RATING              Integer                 2
 #         ACT_INDIC               Integer                 2
-#         ACT_SPECIL              Long Integer            4
-#         MISC                    Short Text              2
-#         FIDE RATING             Long Integer            4
-#         Account Receivable      Currency                8
-#         Account Payable         Currency                8
+#         ACT_SPECIL              Long Integer            4     EXCLUDED
+#         MISC                    Short Text              2     EXCLUDED (???: E, G, LG)
+#         FIDE RATING             Long Integer            4     EXCLUDED (unreliable)
+#         Account Receivable      Currency                8     EXCLUDED
+#         Account Payable         Currency                8     EXCLUDED
 #         Notes                   Long Text               -
-#         CC Number               Short Text             16
-#         CC Expiry               Date With Time          8
-#         Auto Renew              Byte                    1
+#         CC Number               Short Text             16     EXCLUDED
+#         CC Expiry               Date With Time          8     EXCLUDED
+#         Auto Renew              Byte                    1     EXCLUDED
 #         Email                   Short Text             50
 #         Last Update             Date With Time          8
+
 # ----------------------------------------------------------------------
 # - Table: "CROSSTABLES":
-#         TOURN NUMBER            Long Integer            4
-#         FINISH POSITION         Integer                 2
-#         CFC NUMBER              Double                  8
-#         TOURN NAME              Short Text             35
-#         FINISH DATE             Date With Time          8
-#         REF NUMBER              Short Text              7
-#         STYLE                   Short Text              3
-#         TYPE                    Short Text              1
-#         PROVINCE                Short Text              2
-#         TD NUMBER               Long Integer            4
-#         ORG NUMBER              Long Integer            4
-#         PLAYERS                 Integer                 2
-#         ROUNDS                  Integer                 2
-#         GAMES PLAYED            Integer                 2
-#         PRE RATING              Integer                 2
-#         PERF RATING             Integer                 2
-#         POST RATING             Integer                 2
-#         RATING INDICATOR        Integer                 2
-#         RESULTS                 Short Text            255
-#         TOTAL                   Double                  8
-#         PLAYERS PROV            Short Text              2
-#         Last Update             Date With Time          8
-#         ID                      Long Integer            4
+#         TOURN NUMBER            Long Integer            4     Event, Result
+#         FINISH POSITION         Integer                 2     Result
+#         CFC NUMBER              Double                  8     Result
+#         TOURN NAME              Short Text             35     Event
+#         FINISH DATE             Date With Time          8     Event
+#         REF NUMBER              Short Text              7     EXCLUDED (usually blank, 0, =TD NUMBER)
+#         STYLE                   Short Text              3     Event (S=>SS, R=>RR)
+#         TYPE                    Short Text              1     Event, Result (R, A=>Q)
+#         PROVINCE                Short Text              2     Event
+#         TD NUMBER               Long Integer            4     Event
+#         ORG NUMBER              Long Integer            4     Event
+#         PLAYERS                 Integer                 2     Event
+#         ROUNDS                  Integer                 2     Event
+#         GAMES PLAYED            Integer                 2     Result
+#         PRE RATING              Integer                 2     Result
+#         PERF RATING             Integer                 2     Result
+#         POST RATING             Integer                 2     Result
+#         RATING INDICATOR        Integer                 2     Result
+#         RESULTS                 Short Text            255     Result
+#         TOTAL                   Double                  8     Result
+#         PLAYERS PROV            Short Text              2     Result
+#         Last Update             Date With Time          8     EXCLUDED (MS-Access)
+#         ID                      Long Integer            4     EXCLUDED (MS-Access row id)

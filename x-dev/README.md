@@ -11,6 +11,8 @@ CFC Tools for Windows for the Business Office.  Tools that must run on Windows (
 * Python Packages: to install the required packages:
   * `python -m pip install --upgrade pip`
   * `python -m pip install -r x-dev/requirements.txt`
+* IDE Settings:
+  * Use Unix/Mac line endings (\n). Intellij: File > Settings > Editor > Code Style: line separator.
 
 ## Running CFC-Tools
 

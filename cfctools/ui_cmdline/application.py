@@ -31,5 +31,10 @@ class Application:
                 args.cmu_cfcmdb,
                 args.cmu_cfcmdb_pw
             )
+        elif args.action == 'ed':
+            from ..services import drupal_events_extract
+            drupal_events_extract.extract(
+                args.drupal_csv,
+            )
         else:
             print(f'Unknown action: "{args.action}"')

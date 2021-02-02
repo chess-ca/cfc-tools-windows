@@ -13,4 +13,6 @@ def parse_args():
         help='"cfc*.mdb" database to be updated (an .mdb file)')
     ap.add_argument('--cmupw', dest='cmu_cfcmdb_pw',
         help='Password for the "cfc*.mdb" database')
+    ap.add_argument('--drupal', dest='drupal_csv',
+                    help='CSV file extracted from Drupal\'s database')
     return ap.parse_args()

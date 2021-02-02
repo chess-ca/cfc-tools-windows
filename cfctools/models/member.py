@@ -21,7 +21,8 @@ class Member:
     gender: str = ''
 
     email: str = ''
-    address: str = ''
+    phone: str = ''
+    # DEPRECATING address: str = ''
     addr_line1: str = ''
     addr_line2: str = ''
     addr_city: str = ''

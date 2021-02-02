@@ -4,7 +4,7 @@ root = pathlib.Path(__file__).resolve().parents[2]
 if str(root) not in sys.path:
     sys.path.insert(0, str(root))
 
-from common.datamappers.job import JobFile
+from ..datamappers.job import JobFile
 
 
 class TestJobFile(unittest.TestCase):
@@ -31,9 +31,9 @@ class TestJobFile(unittest.TestCase):
         jf.args['zootka'] = 'filburmore'
         jf.args['start-date'] = '2021-01-20-120000'
         data = ['first', 'second', 'third']
-        jf.add_data_file('data.0001.txt', '\n'.join(data))
+        jf.writestr('data.0001.txt', '\n'.join(data))
         data = ['zippity', 'dooooooo', 'daaaaaaaaa']
-        jf.add_data_file('data.0002.txt', '\n'.join(data))
+        jf.writestr('data.0002.txt', '\n'.join(data))
         jf.close()
 
 
