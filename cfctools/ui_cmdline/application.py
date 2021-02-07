@@ -26,8 +26,8 @@ class Application:
                 cfc_mdb_pw=args.cmu_cfcmdb_pw,
             )
         elif args.action == 'emdb':
-            from ..services import extract_from_mdb
-            extract_from_mdb.extract(
+            from ..services import cfc_mdb_extract
+            cfc_mdb_extract.extract(
                 args.cmu_cfcmdb,
                 args.cmu_cfcmdb_pw
             )

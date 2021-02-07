@@ -2,7 +2,7 @@
 import pathlib as pl
 import zipapp
 
-dir_app = pl.Path(__file__).parents[1]
+dir_app = pl.Path(__file__).resolve().parents[1]
 f_pyzw = dir_app / 'x-dev' / 'CFC-Tools.pyzw'
 
 

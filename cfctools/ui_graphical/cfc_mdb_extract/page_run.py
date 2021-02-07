@@ -3,7 +3,7 @@ import tkinter as tk, threading
 from tkinter import ttk
 import cfctools.ui_graphical.application as app
 from ..main import app_widgets
-from ...services import extract_from_mdb
+from ...services import cfc_mdb_extract
 
 
 class RunPage(app_widgets.Page):
@@ -52,4 +52,4 @@ class _Worker(threading.Thread):
         self.updated_text = kwargs.get('updated_text', '')
 
     def run(self):
-        extract_from_mdb.extract(self.cfcmdb, self.cfcmdb_pw, self.updated_text)
+        cfc_mdb_extract.extract(self.cfcmdb, self.cfcmdb_pw, self.updated_text)

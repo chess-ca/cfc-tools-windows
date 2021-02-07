@@ -1,3 +1,11 @@
+# ======================================================================
+# services/cfc_mdb_extract.py
+#   - Extracts member and event data from a cfc*.mdb (MS-Access)
+#     into a "job-file" (a .zip file with job.ini & data files).
+#   - Extract includes all members; and events recorded 2019 and later.
+#   - This job-file is uploaded to the CFC Server to update its data.
+#   - Ran weekly by Bob Gillanders after the old Ratings program.
+# ======================================================================
 
 import os, sys, io, pathlib, logging, datetime, re
 from .. import models as m

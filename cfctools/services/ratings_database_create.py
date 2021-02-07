@@ -1,3 +1,10 @@
+# ======================================================================
+# service/ratings_database_create.py
+#   - Extracts from cfc*.mdb to SQLite the data for Ratings.
+#   - Ran weekly by Don Parakin on cfc*.mdb from Bob (via Google Storage)
+#     to create a .sqlite that was then uploaded to the CFC-Server.
+#   - Initial version. Will be replaced by a service on CFC-Sever.
+# ======================================================================
 
 import logging, sys, pathlib, datetime, sqlite3, re
 from .. import models as m

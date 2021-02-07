@@ -1,3 +1,12 @@
+# ======================================================================
+# services/drupal_events_extract.py
+#   - Deletable.  Used to convert events data in Drupal CSV files.
+#   - Drupal's events data was exported from MySQL to CSV (with Drupal
+#     column names). This service reads those CSV files and writes to
+#     a job-file with new-schema column names.
+#   - Once this one-time migration & conversion is complete, to capture
+#     the historical event data (1996 to 2018), this will not be needed.
+# ======================================================================
 
 import os, sys, io, pathlib, logging, datetime, re
 from .. import models as m

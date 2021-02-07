@@ -1,4 +1,8 @@
-
+# ======================================================================
+# services/cfc_mdb_update.py:
+#   - Update a cfc*.mdb (MS-Access) with data from GoMembership (MS-Excel)
+#   - Ran weekly by Bob Gillanders just before the old Ratings program.
+# ======================================================================
 import logging, sys, pathlib, datetime
 from .. import models as m
 from . import utils
