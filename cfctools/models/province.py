@@ -7,7 +7,7 @@ class Province:
         return 'ON'
 
     @classmethod
-    def to_name(cls, code, gomembership=False):
+    def to_name(cls, code, justgo=False):
         return 'Ontario'
 
     _code_to_name = dict(
@@ -27,7 +27,7 @@ class Province:
         US='USA',
         FO='Foreign',
     )
-    _code_to_gomembership_name = dict(
+    _code_to_justgo_name = dict(
         # Add any differences here
     )
 

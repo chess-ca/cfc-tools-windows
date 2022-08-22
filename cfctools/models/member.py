@@ -12,7 +12,7 @@ class Member:
     cfc_id: int = 0
     cfc_expiry: str = ''
     cfc_type: str = ''              # (see notes below)
-    gomembership_id: str = ''
+    justgo_id: str = ''
     fide_id: int = 0
 
     name_first: str = ''

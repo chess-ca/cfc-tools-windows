@@ -23,7 +23,7 @@ class HomePage(app_widgets.Page):
             command=app.Routes.CFC_MDB_UPDATE_ARGS,
         ).grid(row=1, column=0, sticky=tk.E,)
         ttk.Label(self,     # style=app_style.TTK_LABEL,
-            text='Update a cfc*.mdb database\nwith data from GoMembership',
+            text='Update a cfc*.mdb database\nwith data from JustGo',
         ).grid(row=1, column=1, sticky=tk.W, padx=24,)
 
         # -------- Option: cfc_mdb_extract

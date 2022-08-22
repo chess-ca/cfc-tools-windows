@@ -34,7 +34,7 @@ class GetArgsPage(app_widgets.Page):
         f1.grid_columnconfigure(0, weight=1)
         f1w1 = app_widgets.LabelFileEntry(
             parent=f1,
-            label='"All Members With Custom Field" report from GoMembership (.xlsx):',
+            label='"All Members With Custom Field" report from JustGo (.xlsx):',
             w_var=self.w_vars.members_xlsx,
             initialdir=self.w_vars.initialdir,
             filetypes=[('xlxs files', '*.xlsx'),('all files', '*.*')],

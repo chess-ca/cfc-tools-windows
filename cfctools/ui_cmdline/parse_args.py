@@ -5,8 +5,8 @@ def parse_args():
     ap = argparse.ArgumentParser(description='CFC Tools for Business Office tasks')
     # --- Action to perform (if not specified, invoke graphical UI)
     ap.add_argument('-a', '--action', dest='action',
-                    help='"cmu" for CFC Members Update (GoMembership data); "r" for Ratings Database create')
-    # --- CFC Members Update (cmu) with GoMembership data
+                    help='"cmu" for CFC Members Update (JustGo data); "r" for Ratings Database create')
+    # --- CFC Members Update (cmu) with JustGo data
     ap.add_argument('--cmum', dest='cmu_members',
         help='"All Members With Custom Field" report (an .xlsx file)')
     ap.add_argument('--cmuc', dest='cmu_cfcmdb',

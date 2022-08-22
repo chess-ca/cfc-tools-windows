@@ -1,7 +1,13 @@
-
+# ======================================================================
+# job.py
+# ======================================================================
 import zipfile as zf, datetime as dt, configparser, io
 
-
+# ----------------------------------------------------------------------
+# class: JobFile
+#   - a .zip file containing job.ini and files required by the job.
+#   - job.ini defines type of job, etc needed to process the job.
+# ----------------------------------------------------------------------
 class JobFile:
     def __init__(self,
         filepath, mode='r',
