@@ -55,6 +55,9 @@ def _process_members(members_xlsx, cfc_mdb, cfc_mdb_pw):
     n_read, n_added, n_updated = 0, 0, 0
     xlsx = utils.XLSX(members_xlsx, ws_name)
 
+    cfc_added = []
+    cfc_updated = []
+
     for ws_row in xlsx.get_all():
         n_read += 1
         # if n_read < 10123:
@@ -71,19 +74,29 @@ def _process_members(members_xlsx, cfc_mdb, cfc_mdb_pw):
         mdb_row = mdb.get_id(ws_row['NUMBER'])
         if mdb_row is None:
             n_added += 1
+            # ---- Set cols to defaults (MS-Access wasn't setting these correctly)
+            ws_row['RATING'] = 0
+            ws_row['INDICATOR'] = 0
+            ws_row['ACT_RATING'] = 0
+            ws_row['ACT_INDIC'] = 0
             mdb.insert(ws_row)
-            continue
+            cfc_added.append(str(int(ws_row['NUMBER'])))
+        else:
+            unequal_cols = _get_unequal_cols(mdb_row, ws_row)
+            if len(unequal_cols) > 0:
+                n_updated += 1
+                # FOR DEBUGGING:
+                # if n_updated > 100 and n_updated < 121:
+                #     _console.info(f'   mid={ws_row["NUMBER"]}, cols={unequal_cols}')
+                mdb.update(ws_row, unequal_cols)
+                cfc_updated.append(str(int(ws_row['NUMBER'])))
 
-        unequal_cols = _get_unequal_cols(mdb_row, ws_row)
-        if len(unequal_cols) > 0:
-            n_updated += 1
-            # FOR DEBUGGING:
-            # if n_updated > 100 and n_updated < 121:
-            #     _console.info(f'   mid={ws_row["NUMBER"]}, cols={unequal_cols}')
-            mdb.update(ws_row, unequal_cols)
         if n_read % 10000 == 0:
             _console.info(f'   ... {n_read:,} read; {n_updated:,} members updated; {n_added:,} members added')
+
     _console.info(f'   Finished: {n_read:,} read; {n_updated:,} members updated; {n_added:,} members added')
+    _console.info(' - CFC ids added: ' + ', '.join(cfc_added))
+    _console.info(' - CFC ids updated: ' + ', '.join(cfc_updated))
     return _OKAY
 
 
