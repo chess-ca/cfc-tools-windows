@@ -36,7 +36,8 @@ class RunPage(app_widgets.Page):
 
     def before_showing(self, **kwargs):
         self.logbox.delete('1.0', tk.END)
-        self.logbox.activate()
+        cfcmdb = kwargs.get('cfcmdb')
+        self.logbox.activate(log_file=cfcmdb+'.update-log.txt')
 
     def after_showing(self, **kwargs):
         # app.update_gui()

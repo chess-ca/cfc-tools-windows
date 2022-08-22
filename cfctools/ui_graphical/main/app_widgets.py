@@ -148,11 +148,13 @@ class LabelFileEntry(ttk.Frame):
 # ---------------------------------------------------------------------
 class LoggerBox(scrolledtext.ScrolledText):
     # Displays whatever is written to the "console" log (done by a service)
-    def activate(self):
+    def activate(self, log_file=None):
         logger = logging.getLogger('console')
         for h in logger.handlers:
             logger.removeHandler(h)
         logger.addHandler(logging.StreamHandler(stream=self))
+        if log_file:
+            logger.addHandler(logging.FileHandler(str(log_file), mode='a'))
         logger.setLevel(logging.INFO)
 
     def write(self, text_nl):

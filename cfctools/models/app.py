@@ -4,7 +4,7 @@ import pathlib
 
 
 class App(SimpleNamespace):
-    version = '1.2.0'
+    version = '1.3.0 (2022-08)'
     title = 'CFC Tools'
     dir_root = pathlib.Path(__file__).parents[2]
 

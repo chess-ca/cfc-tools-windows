@@ -12,6 +12,8 @@ _OKAY = True
 
 
 def update(members_xlsx, cfc_mdb, cfc_mdb_pw):
+    now_dt = datetime.datetime.now()
+    _console.info('%s: %s', now_dt.strftime('%Y-%m-%d-%H:%M:%S'), '-'*30)
     _console.info('Updating a CFC MS-Access database using CFC-Tools version %s', m.app.version)
 
     try:
@@ -95,8 +97,8 @@ def _process_members(members_xlsx, cfc_mdb, cfc_mdb_pw):
             _console.info(f'   ... {n_read:,} read; {n_updated:,} members updated; {n_added:,} members added')
 
     _console.info(f'   Finished: {n_read:,} read; {n_updated:,} members updated; {n_added:,} members added')
-    _console.info(' - CFC ids added: ' + ', '.join(cfc_added))
-    _console.info(' - CFC ids updated: ' + ', '.join(cfc_updated))
+    _console.info(cfc_id_list(' - CFC ids added:', cfc_added))
+    _console.info(cfc_id_list(' - CFC ids updated:', cfc_updated))
     return _OKAY
 
 
@@ -188,3 +190,15 @@ def _get_unequal_cols(mdb_row, ws_row):
         if mdb_val != ws_val:
             unequal_cols.append(ws_key)
     return unequal_cols
+
+
+def cfc_id_list(line1, cfc_ids, per_row=10, indent=3):
+    cfc_ids = sorted(cfc_ids)
+    prefix = '\n' + (' ' * indent)
+    out = line1
+    if len(cfc_ids) == 0:
+        out += prefix + '(none)'
+    else:
+        for i in range(0, len(cfc_ids), per_row):
+            out += prefix + ', '.join(cfc_ids[i:i+per_row])
+    return out
